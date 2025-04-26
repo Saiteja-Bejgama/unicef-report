@@ -1,0 +1,195 @@
+
+---
+title: "📘 UNICEF Data Story: Global Child Vulnerability & DTP Vaccination"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+    format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    embed-resources: true
+    smooth-scroll: true
+    page-layout: full
+    number-sections: true
+    css: styles.css 
+---
+#  Student Details
+
+- **Name:** Saiteja Bejgama
+- **student_id:** "A00047721"
+- **Programme:** MSc in Management (Strategy) 
+
+---
+
+
+## ✍️ Executive Summary
+
+This report explores global patterns in child vulnerability, particularly focusing on DTP vaccination indicators, using UNICEF data.
+Through geographic, demographic, and temporal analyses, we uncover disparities between countries, differences across genders, and trends over time.
+The findings support targeted intervention planning, policy-making, and resource allocation to improve child health worldwide.
+
+---
+
+## Introduction
+
+Vaccination rates, education, and other well-being indicators are critical measures of child development globally.
+This report leverages UNICEF's datasets to explore child health through several lenses:
+
+- Geographic disparities
+- Gender gaps
+- Age-related patterns
+- Changes over time
+
+Our goal is to provide actionable insights to improve outcomes for vulnerable children worldwide.
+
+---
+
+## 🎯 Objectives
+
+- To analyze global disparities in child vulnerability using UNICEF data.
+
+- To explore DTP vaccination coverage trends across different countries, genders, and over time.
+
+- To visualize geographic, demographic, and temporal patterns to identify areas requiring targeted interventions.
+
+- To provide data-driven insights that support policy-making and strategic planning for improving child health worldwide.
+
+---
+
+## 🗂️ Data Preview
+Insight:
+The cleaned dataset includes country, time period, observation value, sex, unit of measure, and current age — ready for rich analysis.
+
+
+```{python}
+import pandas as pd
+df = pd.read_csv("unicef_indicator_cleaned.csv")
+df = df.dropna(subset=['country', 'obs_value', 'time_period', 'sex'])
+df.head()
+```
+---
+
+## 🗺️ World View: Average Indicator by Country
+
+This map visualizes the global distribution of the average indicator values by country. The choropleth coloring highlights where the indicator value is higher or lower. The data is merged with a world shapefile to accurately position countries geographically. This visualization provides a clear picture of regional disparities and offers insights into potential areas of concern. The color gradient effectively indicates the severity of the indicator, guiding further analysis. Clear geographic disparities exist — certain African and South Asian countries show significantly lower indicator values compared to Europe and North America.
+
+
+```{python}
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+world = gpd.read_file('ne_110m_admin_0_countries.shp')
+
+df['obs_value'] = pd.to_numeric(df['obs_value'], errors='coerce')
+map_df = df.groupby('country')['obs_value'].mean().reset_index()
+
+merged = world.merge(map_df, left_on='ADMIN', right_on='country')
+
+ax = merged.plot(column='obs_value', cmap='YlOrRd', legend=True, figsize=(12, 8), edgecolor='black')
+ax.set_title('🌎 Country-wise Average UNICEF Indicator', fontsize=16)
+plt.axis('off')
+plt.show()
+
+```
+---
+
+## 🏆 Top 20 Countries: Highest Average Indicator
+
+This horizontal bar chart showcases the 20 countries with the highest average indicator values. By ordering the countries in a descending manner, the chart highlights top-performing countries at a glance. The clear bar lengths and flipped coordinates allow for easier comparison across countries. This visualization helps identify leaders and laggards in the dataset. It serves as a useful tool for focusing resource allocation or further investigation.
+
+A few countries consistently outperform others — interestingly, small nations and wealthy countries dominate the top of the list.
+
+```{python}
+from plotnine import ggplot, aes, geom_bar, coord_flip, labs, theme_minimal
+
+top_countries = df.groupby('country')['obs_value'].mean().nlargest(20).reset_index()
+
+(
+    ggplot(top_countries, aes(x='reorder(country, obs_value)', y='obs_value')) +
+    geom_bar(stat='identity', fill='#2a9d8f') +
+    coord_flip() +
+    theme_minimal() +
+    labs(title='🏅 Top 20 Countries by Average Indicator Value', x='Country', y='Average Value')
+)
+
+```
+
+---
+
+## 👩‍🦰 Gender-wise Indicator Insights
+
+Although Male and Female indicator trends generally move together, subtle variations hint at small gender-based inequalities that have changed over time.
+
+```{python}
+from plotnine import ggplot, aes, geom_area, labs, theme_minimal,geom_line,geom_point
+
+gender_df = df.groupby(['sex', 'time_period'])['obs_value'].mean().reset_index()
+
+(
+    ggplot(gender_df, aes(x='time_period', y='obs_value', fill='sex')) +
+    geom_area(alpha=0.6, position='identity') +
+    theme_minimal() +
+    labs(title='🚻 Gender-wise Area Plot of Indicator Over Time', x='Year', y='Average Value')
+)
+
+
+```
+
+---
+
+## 📈 Scatterplot: Indicator Value vs Age
+
+Overall progress is visible over the years, but some periods show stagnation or decline — indicating a need for renewed focus during specific timeframes.
+
+```{python}
+df['time_period'] = pd.to_numeric(df['time_period'], errors='coerce')
+time_df = df.groupby('time_period')['obs_value'].mean().reset_index()
+
+(
+    ggplot(time_df, aes(x='time_period', y='obs_value')) +
+    geom_line(color='#e63946') +
+    geom_point() +
+    theme_minimal() +
+    labs(title='📈 Trend of UNICEF Indicator Over Time', x='Year', y='Average Value')
+)
+```
+
+---
+
+## ✍️ Summary
+
+This report presents a comprehensive exploration of global child vulnerability indicators, with a special focus on DTP vaccination coverage. Using cleaned UNICEF data, the study delivers powerful visual insights through world maps, bar charts, line graphs, and gender-based area plots. Analyses were conducted geographically, temporally, and demographically to uncover patterns and disparities. Each visualization was carefully structured to highlight critical issues like regional differences, subtle gender inequalities, and periods of stagnation in child health progress. The findings underscore the need for geographically specific, gender-sensitive, and time-conscious strategies to uplift vulnerable populations globally.
+
+
+---
+
+## 🧠 Conclusion
+The global analysis of child health indicators reveals notable disparities between countries, persistent gender gaps, and uneven progress over time. High-income countries consistently report better outcomes, while many African and South Asian countries still face significant challenges. Although male and female trends largely mirror each other, subtle inequalities persist. Time series analysis highlights periods where progress has slowed, signaling the need for renewed focus and investment. These insights call for urgent and sustained action by governments, health agencies, and global organizations to ensure that every child receives equitable healthcare opportunities.
+
+---
+
+##🔑 Key Takeaways
+- 🌍 Geographic Disparities: Wealthier nations consistently outperform lower-income regions, highlighting the need for focused international aid.
+
+- 🚻 Gender Gaps: While small, consistent gender differences in vaccination and health indicators still exist and must be addressed.
+
+-  Time Trends: Progress is evident, but certain periods show stagnation, emphasizing the need for sustained monitoring and intervention.
+
+- 🛡️ Policy Implications: Global child health initiatives must be data-driven, regionally customized, gender-sensitive, and dynamically responsive over time.
+
+---
+
+## 📚 References
+
+- UNICEF. (2025). UNICEF Global Databases: Child Well-being Indicators. Retrieved from https://data.unicef.org
+
+- Natural Earth. (2025). Admin 0 – Countries Shapefile Dataset. Retrieved from https://www.naturalearthdata.com
+
+- Plotnine Library Documentation. (2025). A Grammar of Graphics for Python. Retrieved from https://plotnine.readthedocs.io
+
+
